@@ -1,0 +1,34 @@
+name: Check for Errors
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Auto-setup package.json & check errors
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "No package.json found. Creating one..."
+            npm init -y
+          fi
+
+          npm install
+
+          if [ -n "$(find . -maxdepth 3 -name '*.js' -not -path './node_modules/*')" ]; then
+            echo "Scanning JavaScript files for errors..."
+            npx eslint@8 --no-eslintrc --env browser,es2021,node --parser-options=ecmaVersion:latest --rule 'no-undef: error' --rule 'no-unused-vars: warn' "**/*.js" --ignore-pattern "node_modules/**"
+          else
+            echo "No .js files found to check."
+          fi
+
+          npm run lint --if-present
+          npm run build --if-present
