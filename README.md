@@ -19,6 +19,8 @@ Created by Auri
 git clone https://github.com/AuriCuki1/AuriTerm
 cd AuriTerm
 bash install.sh
+pkg install git
+
 
 # Launch
 
