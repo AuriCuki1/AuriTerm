@@ -1,0 +1,27 @@
+
+{
+  "project": "AuriTerm",
+  "version": "1.0.0",
+  "owner": "Auri",
+  "theme": {
+    "primary": "pink",
+    "secondary": "purple",
+    "accent": "cyan"
+  },
+  "effects": {
+    "color_art": true,
+    "corruption": true,
+    "animations": true,
+    "slow_text": true
+  },
+  "system": {
+    "allow_system_modifications": false,
+    "visual_simulations_only": true
+  },
+  "modules": {
+    "auribot": true,
+    "database": true,
+    "color_art": true,
+    "diagnostics": true
+  }
+}
