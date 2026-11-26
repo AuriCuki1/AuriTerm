@@ -15,14 +15,16 @@ import uuid
 import calendar
 import shlex
 import string
+import colorsys
+import re
 from pathlib import Path
 
 # ==========================================
-# AURITERM — ALL IN ONE
+# AURITERM 2.1 BISCUIT
 # Created by Auri
 # ==========================================
 
-VERSION = "2.0.0"
+VERSION = "2.1 Biscuit"
 OWNER = "Auri"
 PROJECT = "AuriTerm"
 
@@ -39,6 +41,99 @@ GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
+
+RAINBOW_MODE = False
+RAINBOW_PHASE = 0.0
+
+ORIGINAL_PRINT = print
+
+
+# ==========================================
+# RAINBOW ENGINE — SHIFTING HUES
+# ==========================================
+
+def rainbow_color(position, phase=None):
+    if phase is None:
+        phase = (time.monotonic() * 0.20) % 1.0
+
+    hue = (position * 0.045 + phase) % 1.0
+    r, g, b = colorsys.hsv_to_rgb(hue, 1, 1)
+
+    return (
+        f"\033[38;2;{int(r*255)};"
+        f"{int(g*255)};{int(b*255)}m"
+    )
+
+
+def print(*args, **kwargs):
+    if not RAINBOW_MODE:
+        ORIGINAL_PRINT(*args, **kwargs)
+        return
+
+    sep = kwargs.get("sep", " ")
+    end = kwargs.get("end", "\n")
+    file = kwargs.get("file", sys.stdout)
+    flush = kwargs.get("flush", False)
+
+    message = sep.join(str(arg) for arg in args)
+
+    # Remove existing ANSI colours before applying rainbow.
+    message = re.sub(r"\033\[[0-9;]*m", "", message)
+
+    output = []
+    position = 0
+    phase = (time.monotonic() * 0.20) % 1.0
+
+    for char in message:
+        if char.isspace():
+            output.append(char)
+        else:
+            output.append(rainbow_color(position, phase))
+            output.append(char)
+            output.append(RESET)
+            position += 1
+
+    ORIGINAL_PRINT(
+        "".join(output),
+        end=end,
+        file=file,
+        flush=flush
+    )
+
+
+def rainbow_preview():
+    print("🌈 Shifting rainbow hues...")
+
+    for frame in range(12):
+        phase = (time.monotonic() * 0.20 + frame * 0.055) % 1.0
+        bar = ""
+
+        for i in range(36):
+            bar += rainbow_color(i, phase) + "█"
+
+        ORIGINAL_PRINT("\r" + bar + RESET, end="", flush=True)
+        time.sleep(0.07)
+
+    ORIGINAL_PRINT()
+
+
+def enable_rainbow():
+    global RAINBOW_MODE
+
+    RAINBOW_MODE = True
+    rainbow_preview()
+    print("RAINBOW MODE ENABLED!")
+    print("New terminal output now uses shifting rainbow hues.")
+    print("Use -cancel to disable it.")
+
+
+def cancel_effects():
+    global RAINBOW_MODE
+
+    RAINBOW_MODE = False
+    ORIGINAL_PRINT(YELLOW + "All visual effects cancelled." + RESET)
+    ORIGINAL_PRINT(GREEN + "Rainbow mode: OFF" + RESET)
+
 
 # ==========================================
 # BANNER — ORIGINAL AURI LOGO
@@ -85,7 +180,7 @@ def color_art():
        /\_/\
       ( o.o )
        > ^ <
-       PIXEL CAT
+      PIXEL CAT
 """ + RESET,
 
         PURPLE + r"""
@@ -190,8 +285,10 @@ def safe_calculate(expression):
 
         if isinstance(node, ast.UnaryOp):
             op = type(node.op)
+
             if op not in unary:
                 raise ValueError("Unsupported operation.")
+
             return unary[op](evaluate(node.operand))
 
         raise ValueError("Invalid expression.")
@@ -289,9 +386,12 @@ def settings():
         try:
             with path.open("r", encoding="utf-8") as file:
                 data = json.load(file)
+
             print(json.dumps(data, indent=4))
+
         except (OSError, json.JSONDecodeError):
             print(YELLOW + "Settings could not be read." + RESET)
+
     else:
         print("Theme: Pink / Purple / Cyan")
         print("Effects: Enabled")
@@ -409,6 +509,7 @@ def bot_help():
     line()
     print(CYAN + "CORE COMMANDS" + RESET)
     print("hello, hi, hey, help, time, date, art, about, back, calc")
+    print("Also: -open AuriTerm")
     line()
     print(CYAN + "65 EXTRA COMMANDS" + RESET)
 
@@ -417,6 +518,7 @@ def bot_help():
 
     line()
     print("Example: calc 16 * 16")
+    print("Example: binary 16")
     print("Example: choose pizza | pasta")
 
 
@@ -535,6 +637,7 @@ def bot_command(command, args):
     elif command in ("folders", "files", "ls"):
         try:
             items = sorted(ROOT.iterdir())
+
             if command == "folders":
                 items = [p for p in items if p.is_dir()]
             elif command == "files":
@@ -575,16 +678,20 @@ def bot_command(command, args):
         try:
             amount = int(args[0]) if args else 5
             amount = max(1, min(amount, 30))
+
             for number in range(amount, 0, -1):
                 print(number)
                 time.sleep(1)
+
             print(GREEN + "GO!" + RESET)
+
         except ValueError:
             print("Usage: countdown [1-30]")
 
     elif command in ("add", "subtract", "multiply", "divide"):
         try:
             numbers = [float(x) for x in args]
+
             if len(numbers) < 2:
                 raise ValueError
 
@@ -618,16 +725,18 @@ def bot_command(command, args):
 
             print("Result:", result)
 
-        except (ValueError, IndexError):
-            print("Enter a valid non-negative number for sqrt.")
+        except (ValueError, IndexError, OverflowError):
+            print("Enter a valid number. sqrt requires a non-negative number.")
 
     elif command == "power":
         try:
             a, b = map(float, args[:2])
+
             if abs(b) > 12:
                 print("Exponent limit is 12.")
             else:
                 print("Result:", a ** b)
+
         except (ValueError, IndexError, OverflowError):
             print("Usage: power 2 8")
 
@@ -663,12 +772,14 @@ def bot_command(command, args):
     elif command in ("hex", "binary", "octal"):
         try:
             number = int(args[0])
+
             if command == "hex":
                 print(hex(number))
             elif command == "binary":
                 print(bin(number))
             else:
                 print(oct(number))
+
         except (ValueError, IndexError):
             print("Enter an integer.")
 
@@ -721,9 +832,11 @@ def bot_command(command, args):
 
     elif command == "unique":
         seen = []
+
         for word in args:
             if word.lower() not in [x.lower() for x in seen]:
                 seen.append(word)
+
         print(" ".join(seen))
 
     elif command == "countlines":
@@ -755,7 +868,7 @@ def bot_command(command, args):
 def run_auribot():
     print(PINK + BOLD + "\nAuriBot is online!" + RESET)
     print("Type help to see commands.")
-    print("Type back to return to AuriTerm.")
+    print("Type back or -open AuriTerm to return.")
 
     while True:
         try:
@@ -773,8 +886,13 @@ def run_auribot():
             command = parts[0].lower()
             args = parts[1:]
 
-            if command in ("back", "exit", "quit"):
-                print(PURPLE + "AuriBot signing off!" + RESET)
+            if command in ("back", "exit", "quit", "-open"):
+                if command == "-open" and args:
+                    if " ".join(args).lower() != "auriterm":
+                        print("Usage: -open AuriTerm")
+                        continue
+
+                print(PURPLE + "Returning to AuriTerm!" + RESET)
                 break
 
             elif command in ("hello", "hi", "hey"):
@@ -815,12 +933,114 @@ def run_auribot():
 
 
 # ==========================================
+# NEW AURITERM 2.1 BISCUIT FUNCTIONS
+# ==========================================
+
+def project_size():
+    total = 0
+
+    for path in ROOT.rglob("*"):
+        try:
+            if path.is_file():
+                total += path.stat().st_size
+        except OSError:
+            pass
+
+    return total
+
+
+def show_tree():
+    print(PINK + "AURITERM DIRECTORY TREE" + RESET)
+
+    for path in sorted(ROOT.rglob("*")):
+        try:
+            relative = path.relative_to(ROOT)
+            depth = len(relative.parts) - 1
+            prefix = "    " * depth + "└── "
+
+            if path.is_dir():
+                print(CYAN + prefix + path.name + "/" + RESET)
+            else:
+                print(WHITE + prefix + path.name + RESET)
+
+        except OSError:
+            continue
+
+
+def matrix_effect():
+    print(GREEN + "MATRIX MODE — Press Ctrl+C to stop." + RESET)
+
+    try:
+        for _ in range(30):
+            print(
+                GREEN +
+                "".join(random.choice("010101ABCDEF") for _ in range(48))
+                + RESET
+            )
+            time.sleep(0.08)
+
+    except KeyboardInterrupt:
+        print(YELLOW + "\nMatrix effect cancelled." + RESET)
+
+
+def theme_menu():
+    global PINK, PURPLE, CYAN, GREEN, YELLOW
+
+    print("Available themes: pink, purple, cyan, green")
+    choice = input("Theme > ").strip().lower()
+
+    themes = {
+        "pink": ("\033[95m", "\033[35m", "\033[96m", "\033[92m", "\033[93m"),
+        "purple": ("\033[35m", "\033[95m", "\033[94m", "\033[96m", "\033[93m"),
+        "cyan": ("\033[96m", "\033[94m", "\033[95m", "\033[92m", "\033[93m"),
+        "green": ("\033[92m", "\033[32m", "\033[96m", "\033[93m", "\033[95m")
+    }
+
+    if choice in themes:
+        PINK, PURPLE, CYAN, GREEN, YELLOW = themes[choice]
+        print(GREEN + "Theme changed to " + choice.upper() + "!" + RESET)
+    else:
+        print(RED + "Unknown theme." + RESET)
+
+
+def show_modules():
+    print(PINK + BOLD + "AURITERM MODULES" + RESET)
+
+    modules = [
+        "AuriBot",
+        "ColorArt",
+        "DemonDatabase",
+        "Diagnostics",
+        "Settings",
+        "Rainbow Engine",
+        "Matrix Visualizer"
+    ]
+
+    for module in modules:
+        print(CYAN + "[ ONLINE ] " + RESET + module)
+
+
+def show_info():
+    line()
+    print(PINK + BOLD + "AURITERM SYSTEM INFORMATION" + RESET)
+    print("Project:", PROJECT)
+    print("Version:", VERSION)
+    print("Owner:", OWNER)
+    print("Python:", platform.python_version())
+    print("System:", platform.system())
+    print("Architecture:", platform.machine())
+    print("Project size:", round(project_size() / 1024, 2), "KB")
+    print("Rainbow mode:", "ON" if RAINBOW_MODE else "OFF")
+    line()
+
+
+# ==========================================
 # AURITERM HELP
 # ==========================================
 
 def help_menu():
     line()
-    print(PINK + BOLD + "AURITERM COMMAND CENTER" + RESET)
+    print(PINK + BOLD + "AURITERM 2.1 BISCUIT COMMAND CENTER" + RESET)
     line()
 
     commands = [
@@ -830,6 +1050,25 @@ def help_menu():
         ("-open DemonDatabase", "Open Demon Database"),
         ("-open Diagnostics", "System diagnostics"),
         ("-open Settings", "Show settings"),
+        ("-open AuriTerm", "Return to main AuriTerm"),
+        ("-rainbow", "Enable animated shifting rainbow hues"),
+        ("-cancel", "Cancel visual effects / rainbow"),
+        ("-time", "Show current time"),
+        ("-date", "Show current date"),
+        ("-whoami", "Show current username"),
+        ("-pwd", "Show current directory"),
+        ("-ls", "List project files"),
+        ("-tree", "Show folder structure"),
+        ("-size", "Show project size"),
+        ("-uptime", "Show session uptime"),
+        ("-random", "Generate a random number"),
+        ("-quote", "Show a random quote"),
+        ("-joke", "Tell a joke"),
+        ("-matrix", "Matrix visual effect"),
+        ("-theme", "Change terminal theme"),
+        ("-modules", "List AuriTerm modules"),
+        ("-refresh", "Refresh AuriTerm screen"),
+        ("-info", "Show project information"),
         ("-corrupt", "Visual corruption simulation"),
         ("-clear", "Clear terminal"),
         ("-version", "Show version"),
@@ -869,6 +1108,80 @@ def execute(command):
     elif lower == "-open settings":
         settings()
 
+    elif lower == "-open auriterm":
+        clear()
+        banner()
+        print(GREEN + "AuriTerm reopened successfully!" + RESET)
+
+    elif lower == "-rainbow":
+        enable_rainbow()
+
+    elif lower == "-cancel":
+        cancel_effects()
+
+    elif lower == "-time":
+        print(datetime.datetime.now().strftime("%H:%M:%S"))
+
+    elif lower == "-date":
+        print(datetime.datetime.now().strftime("%d/%m/%Y"))
+
+    elif lower == "-whoami":
+        print(os.environ.get("USER", os.environ.get("USERNAME", "Auri")))
+
+    elif lower == "-pwd":
+        print(ROOT)
+
+    elif lower == "-ls":
+        try:
+            for item in sorted(ROOT.iterdir()):
+                print(item.name + ("/" if item.is_dir() else ""))
+        except OSError as error:
+            print("Directory error:", error)
+
+    elif lower == "-tree":
+        show_tree()
+
+    elif lower == "-size":
+        print("AuriTerm size:", round(project_size() / 1024, 2), "KB")
+
+    elif lower == "-uptime":
+        print("Session uptime:", round(time.time() - START_TIME), "seconds")
+
+    elif lower == "-random":
+        print("Random number:", random.randint(1, 100))
+
+    elif lower == "-quote":
+        print(random.choice([
+            "Keep creating.",
+            "Every project starts with an idea.",
+            "Errors are part of learning.",
+            "Build something amazing."
+        ]))
+
+    elif lower == "-joke":
+        print(random.choice([
+            "Why did the computer get cold? Windows were open.",
+            "Why was the keyboard tired? Too many shifts.",
+            "Why did the programmer quit? They didn't get arrays."
+        ]))
+
+    elif lower == "-matrix":
+        matrix_effect()
+
+    elif lower == "-theme":
+        theme_menu()
+
+    elif lower == "-modules":
+        show_modules()
+
+    elif lower == "-refresh":
+        clear()
+        banner()
+        print(GREEN + "AuriTerm refreshed!" + RESET)
+
+    elif lower == "-info":
+        show_info()
+
     elif lower == "-corrupt":
         corruption()
 
@@ -903,9 +1216,10 @@ def main():
     clear()
     banner()
 
-    slow(GREEN + "AuriTerm initialized successfully." + RESET)
+    slow(GREEN + "AuriTerm 2.1 Biscuit initialized successfully." + RESET)
     print("Type -help to view commands.")
     print("Type -open AuriBot to launch AuriBot.")
+    print("Type -rainbow for shifting rainbow colours!")
 
     running = True
 
