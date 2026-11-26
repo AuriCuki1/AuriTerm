@@ -16,7 +16,7 @@ Created by Auri
 
 # Installation
 
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/AuriCuki1/AuriTerm
 cd AuriTerm
 bash install.sh
 
