@@ -1,0 +1,63 @@
+
+{
+  "database_name": "AuriTerm Demon Database",
+  "version": "1.0.0",
+  "entries": [
+    {
+      "id": "D-001",
+      "name": "NULLENTITY",
+      "type": "Unknown",
+      "status": "Unidentified",
+      "description": "An entity with no recorded identity."
+    },
+    {
+      "id": "D-002",
+      "name": "PINKERROR",
+      "type": "Glitch",
+      "status": "Active",
+      "description": "A fictional pink digital anomaly."
+    },
+    {
+      "id": "D-003",
+      "name": "VOID-16",
+      "type": "Void",
+      "status": "Unknown",
+      "description": "A mysterious entry numbered sixteen."
+    },
+    {
+      "id": "D-004",
+      "name": "UNKNOWN",
+      "type": "Unclassified",
+      "status": "Unknown",
+      "description": "No additional information available."
+    },
+    {
+      "id": "D-005",
+      "name": "AURI-GHOST",
+      "type": "Digital",
+      "status": "Dormant",
+      "description": "A fictional ghost in the terminal."
+    },
+    {
+      "id": "D-006",
+      "name": "REDSTATIC",
+      "type": "Static",
+      "status": "Active",
+      "description": "A fictional red static phenomenon."
+    },
+    {
+      "id": "D-007",
+      "name": "DREAMBYTE",
+      "type": "Digital",
+      "status": "Unstable",
+      "description": "A fictional creature made of digital fragments."
+    },
+    {
+      "id": "D-008",
+      "name": "KERNEL-16",
+      "type": "Kernel",
+      "status": "Contained",
+      "description": "A fictional system anomaly."
+    }
+  ]
+}
