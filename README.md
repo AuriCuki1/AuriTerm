@@ -1,8 +1,8 @@
 # AuriTerm
 
-A colorful, command driven terminal environment for Termux.
-
-Created by Auri
+A colorful, command driven terminal environment for Termux. You also need to get the Termux:API App in order to do stuff for phone.
+Example: termux-vibrate -d 1000
+Created by AuriCuki1
 
 # Features
 
