@@ -16,10 +16,12 @@ AuriBot, a programmed assistant
 
 # Installation
 
-pkg install git python -y
+pkg update && pkg upgrade -y
+pkg install python git -y
 git clone https://github.com/AuriCuki1/AuriTerm.git
 cd AuriTerm
-
+python main.py
+pkg install termux-api -y
 
 # Launch
 
