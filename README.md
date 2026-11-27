@@ -16,10 +16,10 @@ Created by Auri
 
 # Installation
 
-git clone https://github.com/AuriCuki1/AuriTerm
-cd AuriTerm
-bash install.sh
-pkg install git
+(1) git clone https://github.com/AuriCuki1/AuriTerm
+(2) cd AuriTerm
+(3) bash install.sh
+(4) pkg install git
 
 
 # Launch
