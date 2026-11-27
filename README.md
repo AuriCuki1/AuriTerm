@@ -16,10 +16,9 @@ AuriBot, a programmed assistant
 
 # Installation
 
-(1) git clone https://github.com/AuriCuki1/AuriTerm
-(2) cd AuriTerm
-(3) pkg install git
-(4) pkg install python
+pkg install git python -y
+git clone https://github.com/AuriCuki1/AuriTerm.git
+cd AuriTerm
 
 
 # Launch
