@@ -20,6 +20,7 @@ Created by Auri
 (2) cd AuriTerm
 (3) bash install.sh
 (4) pkg install git
+(5) pkg install python
 
 
 # Launch
