@@ -139,12 +139,25 @@ def banner():
 
 
 DEMONING_ART = r"""
-██╗ ███████╗███╗   ███╗ ██████╗ ███╗   ██╗
-██╔══██╗██╔════╝████╗ ████║██╔═══██╗████╗  ██║
-██║  ██║█████╗  ██╔████╔██║██║   ██║██╔██╗ ██║
-██║  ██║██╔══╝  ██║╚██╔╝██║██║   ██║██║╚██╗██║
-██████╔╝███████╗██║ ╚═╝ ██║╚██████╔╝██║ ╚████║
-╚═════╝ ╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+DDDDDDDDDDDD        EEEEEEEEEEEE        MMMMM       MMMMM
+DDDDDDDDDDDDDD      EEEEEEEEEEEE        MMMMMM     MMMMMM
+DDD         DDD     EEE                 MMM MMM   MMM MMM
+DDD          DDD    EEE                 MMM  MMM MMM  MMM
+DDD          DDD    EEEEEEEEE           MMM   MMMMM   MMM
+DDD          DDD    EEEEEEEEE           MMM    MMM    MMM
+DDD         DDD     EEE                 MMM           MMM
+DDDDDDDDDDDDDD      EEEEEEEEEEEE        MMM           MMM
+DDDDDDDDDDDD        EEEEEEEEEEEE        MMM           MMM
+
+NNNNN       NNN     IIIIIIIIIIII        NNNN       NNN       GGGGGGGGGG
+NNNNNN      NNN         III              NNNN      NNN      GGGGGGGGGGGG
+NNNNNNN     NNN         III              NNNNN     NNN     GGGG
+NNN NNNN    NNN         III              NNN NNN   NNN     GGGG   GGGGG
+NNN  NNNN   NNN         III              NNN  NNN  NNN     GGGG   GGGGGG
+NNN   NNNN  NNN         III              NNN   NNN NNN     GGGG      GGG
+NNN    NNNN NNN         III              NNN    NNNNNN      GGGG     GGG
+NNN     NNNNNNN         III              NNN     NNNNN       GGGGGGGGGGG
+NNN      NNNNNN     IIIIIIIIIIII         NNN      NNNN        GGGGGGGGGG
 """
 
 
@@ -964,10 +977,14 @@ def run_demoning():
     while True:
         try:
             command = dinput().strip()
-            if command.lower() in ("exit", "back", "quit"):
+            normalized = command.strip().lower()
+            if normalized in ("exit", "back", "quit", "return"):
                 dprint("Leaving DEMONING...")
                 return
-            if command.lower() in ("help", "-help"):
+            if normalized in ("-demoning", "demoning", "-demon", "demon"):
+                dprint("You are already inside DEMONING. Type help to see its commands.")
+                continue
+            if normalized in ("help", "-help", "?"):
                 demon_help()
             elif command:
                 demoning_command(command)
@@ -1174,7 +1191,7 @@ def version_info():
 MAIN_COMMANDS = [
     "-help", "-open AuriBot", "-open ColorArt", "-open DemonDatabase",
     "-open Diagnostics", "-open Settings", "-open AuriTerm",
-    "-demoning", "games / -games", "-clock", "-calendar", "-todo <task>",
+    "-demoning (aliases: demoning, -demon, demon)", "games / -games", "-clock", "-calendar", "-todo <task>",
     "-todo list", "-backup", "-restore", "-json <text>", "-calc <math>",
     "-search <filename>", "-versioninfo", "-rainbow", "-cancel", "-time",
     "-date", "-whoami", "-pwd", "-ls", "-tree", "-size", "-uptime",
@@ -1212,7 +1229,7 @@ def execute(command):
 
     if full == "-help":
         help_menu()
-    elif full == "-demoning":
+    elif cmd in ("-demoning", "demoning", "-demon", "demon"):
         run_demoning()
     elif full in ("games", "-games"):
         games_menu()
