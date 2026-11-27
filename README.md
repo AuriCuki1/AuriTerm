@@ -6,7 +6,7 @@ Created by Auri
 
 # Features
 
-, AuriBot, a programmed assistant
+AuriBot, a programmed assistant
 , ColorArt, colorful ASCII art
 , Demon Database, fictional entries
 , Corruption Engine, visual glitch effects
