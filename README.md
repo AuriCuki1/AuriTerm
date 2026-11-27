@@ -18,9 +18,8 @@ Created by Auri
 
 (1) git clone https://github.com/AuriCuki1/AuriTerm
 (2) cd AuriTerm
-(3) bash install.sh
-(4) pkg install git
-(5) pkg install python
+(3) pkg install git
+(4) pkg install python
 
 
 # Launch
