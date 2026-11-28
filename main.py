@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # ============================================================
 # AURITERM 2.2 — ALIVE + DEMONING EXTREME EDITION
-# Single-file Python terminal for Termux
-# Python 3.9+
+# RAW SINGLE-FILE BUILD — TERMUX
 # ============================================================
 
 import os, sys, re, json, time, math, ast, shlex
@@ -41,18 +40,22 @@ DEFAULT_CONFIG = {
     "achievements": [],
 }
 
+
 def load_json(path, default):
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-        return value
+        return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return default.copy()
 
+
 def save_json(path, value):
     temp = path.with_suffix(".tmp")
-    temp.write_text(json.dumps(value, indent=2, ensure_ascii=False),
-                    encoding="utf-8")
+    temp.write_text(
+        json.dumps(value, indent=2, ensure_ascii=False),
+        encoding="utf-8"
+    )
     temp.replace(path)
+
 
 config = load_json(FILES["config"], DEFAULT_CONFIG)
 notes = load_json(FILES["notes"], [])
@@ -73,7 +76,7 @@ if not isinstance(history, list):
     history = []
 
 # ============================================================
-# COLOR ENGINE — SHIFTING HUE
+# COLOR ENGINE
 # ============================================================
 
 RESET = "\033[0m"
@@ -82,22 +85,25 @@ DIM = "\033[2m"
 CLEAR = "\033[2J\033[H"
 HUE_OFFSET = 0.0
 
+
 def rgb(r, g, b):
     return f"\033[38;2;{r};{g};{b}m"
+
 
 def hue_color(position):
     h = (position + HUE_OFFSET) % 1.0
     r, g, b = colorsys.hsv_to_rgb(h, 0.9, 1.0)
     return rgb(int(r * 255), int(g * 255), int(b * 255))
 
+
 def rainbow(text, speed=0.035):
     global HUE_OFFSET
     result = []
     for index, char in enumerate(str(text)):
-        color = hue_color(index * speed)
-        result.append(color + char)
+        result.append(hue_color(index * speed) + char)
     HUE_OFFSET = (HUE_OFFSET + 0.025) % 1.0
     return "".join(result) + RESET
+
 
 def paint(text, color="cyan"):
     colors = {
@@ -113,8 +119,10 @@ def paint(text, color="cyan"):
         return rainbow(text)
     return colors.get(color, "") + str(text) + RESET
 
+
 def out(text="", color="cyan"):
     print(paint(text, color))
+
 
 def rainbow_animation(text, frames=24, delay=0.07):
     global HUE_OFFSET
@@ -124,12 +132,12 @@ def rainbow_animation(text, frames=24, delay=0.07):
         HUE_OFFSET = (HUE_OFFSET + 0.045) % 1.0
     print()
 
+
 # ============================================================
 # LIVING BACKGROUND
 # ============================================================
 
 def living_background(seconds=5):
-    """Animated terminal wallpaper. Press Ctrl+C to stop."""
     width = shutil.get_terminal_size((70, 20)).columns
     width = max(30, min(width, 100))
     symbols = " .:*+x01░▒▓"
@@ -150,12 +158,14 @@ def living_background(seconds=5):
     except KeyboardInterrupt:
         print("\nAnimation stopped.")
 
+
 def ambient_tick():
     if not config.get("ambient", True):
         return
     frames = ["◐", "◓", "◑", "◒"]
     frame = frames[int(time.time() * 4) % len(frames)]
     print(paint(frame, "purple"), end=" ")
+
 
 # ============================================================
 # STORAGE / LOGGING
@@ -169,11 +179,13 @@ def log(message):
     except OSError:
         pass
 
+
 def save_all():
     save_json(FILES["config"], config)
     save_json(FILES["notes"], notes)
     save_json(FILES["todos"], todos)
     save_json(FILES["history"], history)
+
 
 def safe_path(name):
     target = (ROOT / name).resolve()
@@ -181,8 +193,10 @@ def safe_path(name):
         raise ValueError("Path outside AuriTerm folder is blocked.")
     return target
 
+
 def clear_screen():
     os.system("clear" if os.name != "nt" else "cls")
+
 
 # ============================================================
 # BANNER
@@ -207,6 +221,7 @@ def banner():
     print(paint("       ALIVE BACKGROUND ENGINE: ONLINE", "green"))
     print(paint("       DEMONING COMMAND SYSTEM: ONLINE", "green"))
     print()
+
 
 # ============================================================
 # PROFILE / XP
@@ -235,6 +250,7 @@ ACHIEVEMENTS = {
     "demon": "DEMONING Activated",
 }
 
+
 def update_rank():
     rank = "ROOKIE"
     for points, name in RANKS:
@@ -242,10 +258,12 @@ def update_rank():
             rank = name
     config["rank"] = rank
 
+
 def award_xp(amount):
     config["xp"] = int(config.get("xp", 0)) + amount
     update_rank()
     save_json(FILES["config"], config)
+
 
 def achievement(key):
     unlocked = config.setdefault("achievements", [])
@@ -253,6 +271,7 @@ def achievement(key):
         unlocked.append(key)
         save_json(FILES["config"], config)
         out("ACHIEVEMENT UNLOCKED: " + ACHIEVEMENTS[key], "yellow")
+
 
 def profile():
     update_rank()
@@ -264,10 +283,12 @@ def profile():
     out("Achievements: " + str(len(config["achievements"])))
     out("==================================")
 
+
 def achievements():
     for key, name in ACHIEVEMENTS.items():
         state = "UNLOCKED" if key in config["achievements"] else "LOCKED"
         out(f"[{state}] {name}")
+
 
 # ============================================================
 # CALCULATOR
@@ -282,6 +303,7 @@ OPS = {
     ast.Mod: lambda a, b: a % b,
     ast.Pow: lambda a, b: a ** b,
 }
+
 
 def calc(expression):
     if len(expression) > 250:
@@ -316,6 +338,7 @@ def calc(expression):
 
     return walk(tree)
 
+
 # ============================================================
 # UUID / RANDOM GENERATORS
 # ============================================================
@@ -325,6 +348,7 @@ def uuid_command():
     out("UUID: " + value, "purple")
     achievement("uuid")
     return value
+
 
 def generator_command(args):
     kind = args[0].lower() if args else "uuid"
@@ -341,6 +365,7 @@ def generator_command(args):
     else:
         out("Generator types: uuid, hex, token, number, password")
 
+
 def password_generator(length="20"):
     try:
         size = int(length)
@@ -350,6 +375,7 @@ def password_generator(length="20"):
         out("".join(secrets.choice(alphabet) for _ in range(size)), "green")
     except Exception:
         out("Usage: -passgen 20 (8–128)")
+
 
 # ============================================================
 # AURIBOT — 65 COMMAND LIBRARY
@@ -450,6 +476,7 @@ RIDDLES = [
     ("What has a face and hands but no arms?", "clock"),
 ]
 
+
 def auribot(args):
     if not args:
         out("AuriBot commands: -bot help")
@@ -503,8 +530,7 @@ def auribot(args):
     elif action == "number":
         out(str(random.randint(0, 999999)))
     elif action == "color":
-        color = "#{:06X}".format(random.randint(0, 0xFFFFFF))
-        out(color)
+        out("#{0:06X}".format(random.randint(0, 0xFFFFFF)))
     elif action == "palette":
         for i in range(12):
             out("██████  " + f"HUE {i * 30}°")
@@ -665,6 +691,7 @@ def auribot(args):
     elif action == "uuid":
         uuid_command()
 
+
 # ============================================================
 # SYSTEM TOOLS
 # ============================================================
@@ -686,6 +713,7 @@ def system_info():
     except Exception:
         pass
 
+
 def network_info():
     out("Hostname: " + socket.gethostname())
     try:
@@ -693,6 +721,7 @@ def network_info():
             out("Local address: " + item)
     except Exception as error:
         out(str(error))
+
 
 def dns_lookup(domain):
     if not re.fullmatch(r"[A-Za-z0-9.-]{1,253}", domain or ""):
@@ -704,6 +733,7 @@ def dns_lookup(domain):
     except Exception as error:
         out("DNS error: " + str(error))
 
+
 def local_ping():
     try:
         result = subprocess.run(
@@ -713,6 +743,7 @@ def local_ping():
         out(result.stdout or result.stderr)
     except Exception as error:
         out("Ping unavailable: " + str(error))
+
 
 def port_check(port):
     try:
@@ -724,11 +755,13 @@ def port_check(port):
     except Exception:
         out("Local port closed or invalid.")
 
+
 def simulated_trace():
     out("SIMULATED TRACE — no external route scan")
     for item in ("LOCAL DEVICE", "LOCAL ROUTER", "GATEWAY", "DESTINATION"):
         out("-> " + item)
         time.sleep(0.2)
+
 
 # ============================================================
 # FILE TOOLS
@@ -745,6 +778,7 @@ def file_hash(name):
     except Exception as error:
         out("Hash error: " + str(error))
 
+
 def hex_view(name):
     try:
         path = safe_path(name)
@@ -756,6 +790,7 @@ def hex_view(name):
             out(f"{offset:08X}  {hx:<47} {txt}")
     except Exception as error:
         out("Hex error: " + str(error))
+
 
 def file_check(name):
     try:
@@ -775,15 +810,18 @@ def file_check(name):
     except Exception as error:
         out(str(error))
 
+
 def list_files():
     for path in sorted(ROOT.iterdir()):
         out(("[DIR] " if path.is_dir() else "[FILE] ") + path.name)
+
 
 def read_file(name):
     try:
         out(safe_path(name).read_text(encoding="utf-8"))
     except Exception as error:
         out("Read error: " + str(error))
+
 
 def write_file(name, content):
     try:
@@ -795,6 +833,7 @@ def write_file(name, content):
         out("Created " + path.name)
     except Exception as error:
         out("Write error: " + str(error))
+
 
 # ============================================================
 # NOTES / TODO
@@ -831,6 +870,7 @@ def note_command(args):
     else:
         out("Usage: -note add|list|delete|clear")
 
+
 def todo_command(args):
     action = args[0].lower() if args else "list"
     if action == "add":
@@ -866,8 +906,9 @@ def todo_command(args):
             save_json(FILES["todos"], todos)
             out("Tasks cleared.")
 
+
 # ============================================================
-# TERMUX CLIPBOARD — FIXED GET AND SET
+# TERMUX CLIPBOARD
 # ============================================================
 
 def clipboard_command(args):
@@ -909,8 +950,7 @@ def clipboard_command(args):
         executable = shutil.which("termux-clipboard-set")
         if not executable:
             out("Clipboard command is missing.", "red")
-            out("Install Termux:API app, then run:")
-            out("pkg install termux-api")
+            out("Install Termux:API app, then run: pkg install termux-api")
             return
 
         try:
@@ -931,52 +971,82 @@ def clipboard_command(args):
         out("Usage: -clipboard get")
         out("       -clipboard set TEXT")
 
+
 # ============================================================
-# ANDROID API
+# ANDROID API — FOUR VIBRATION COMMANDS
 # ============================================================
 
-def phone_command(args):
-    if not args:
-        out("Usage: -phone battery|torch on|torch off|vibrate MS")
-        return
-
-    action = args[0].lower()
-
-    commands = {
-        "battery": ["termux-battery-status"],
-    }
-
-    if action == "battery":
-        cmd = commands["battery"]
-    elif action == "torch":
-        if len(args) < 2 or args[1] not in ("on", "off"):
-            out("Usage: -phone torch on|off")
-            return
-        cmd = ["termux-torch", args[1]]
-    elif action == "vibrate":
-        try:
-            duration = max(1, min(10000, int(args[1])))
-            cmd = ["termux-vibrate", "-d", str(duration)]
-        except Exception:
-            out("Usage: -phone vibrate 500")
-            return
-    else:
-        out("Unknown phone action.")
-        return
-
+def run_termux_api(cmd):
     if not shutil.which(cmd[0]):
         out("Missing Termux:API command: " + cmd[0], "red")
-        out("Install the Termux:API app and run pkg install termux-api.")
+        out("Install the Termux:API app and run: pkg install termux-api")
         return
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=15
+        )
         if result.returncode == 0:
             out(result.stdout.strip() or "Done.", "green")
         else:
             out(result.stderr.strip() or "Android API command failed.", "red")
     except Exception as error:
         out("API error: " + str(error), "red")
+
+
+def vibrate_command(args):
+    if not args:
+        out("Usage: -vibrate 5000")
+        out("Duration is in milliseconds.")
+        return
+
+    try:
+        duration = max(1, min(10000, int(args[0])))
+    except (ValueError, IndexError):
+        out("Usage: -vibrate 5000")
+        return
+
+    run_termux_api(["termux-vibrate", "-d", str(duration), "-f"])
+
+
+def phone_command(args):
+    if not args:
+        out("Usage: -phone battery|torch on|off|vibrate MS")
+        return
+
+    action = args[0].lower()
+
+    if action == "battery":
+        run_termux_api(["termux-battery-status"])
+
+    elif action == "torch":
+        if len(args) < 2 or args[1].lower() not in ("on", "off"):
+            out("Usage: -phone torch on|off")
+            return
+        run_termux_api(["termux-torch", args[1].lower()])
+
+    elif action == "vibrate":
+        vibrate_command(args[1:])
+
+    else:
+        out("Unknown phone action.")
+
+
+def termux_command(args):
+    if not args:
+        out("Usage: -termux vibrate MS")
+        return
+
+    action = args[0].lower()
+
+    if action == "vibrate":
+        vibrate_command(args[1:])
+    else:
+        out("Supported Termux action: vibrate")
+
 
 # ============================================================
 # GAMES
@@ -993,7 +1063,7 @@ def maze_game():
         list("##########"),
     ]
     y, x = 1, 1
-    moves = {"w": (-1,0), "s": (1,0), "a": (0,-1), "d": (0,1)}
+    moves = {"w": (-1, 0), "s": (1, 0), "a": (0, -1), "d": (0, 1)}
 
     out("MAZE: WASD move, dir redraw, quit exit.")
     while True:
@@ -1027,6 +1097,7 @@ def maze_game():
 
         board[y][x] = "P"
 
+
 def number_game():
     target = random.randint(1, 50)
     attempts = 0
@@ -1048,6 +1119,7 @@ def number_game():
             return
         out("Too low." if number < target else "Too high.")
 
+
 def game_menu():
     out("1. Maze")
     out("2. Number guess")
@@ -1058,8 +1130,9 @@ def game_menu():
     elif choice == "2":
         number_game()
 
+
 # ============================================================
-# DEMONING — 8 COMMANDS
+# DEMONING
 # ============================================================
 
 DEMONING_HISTORY = []
@@ -1076,6 +1149,7 @@ DEMONING_INDEX = [
     "bot", "clear", "help", "commands"
 ]
 
+
 def demon_help():
     out("""
 ========== DEMONING ==========
@@ -1090,10 +1164,12 @@ exit       Return to AuriTerm
 ==============================
 """)
 
+
 def demon_list():
     for i, name in enumerate(DEMONING_INDEX, 1):
         out(f"{i:02}. -{name}")
     out("Indexed commands: " + str(len(DEMONING_INDEX)))
+
 
 def demon_search(args):
     if not args:
@@ -1106,6 +1182,7 @@ def demon_search(args):
             out("[FOUND] -" + name)
     else:
         out("No matches.")
+
 
 def demon_run(args):
     if not args:
@@ -1122,8 +1199,10 @@ def demon_run(args):
     out("[DEMONING] Running -" + name)
     execute("-" + name + (" " + shlex.join(args[1:]) if len(args) > 1 else ""))
 
+
 def demon_random():
     out("Try: -" + random.choice(DEMONING_INDEX))
+
 
 def demon_stats():
     out("DEMONING version: 1.0")
@@ -1131,12 +1210,14 @@ def demon_stats():
     out("Executed: " + str(len(DEMONING_HISTORY)))
     out("Unique: " + str(len(set(DEMONING_HISTORY))))
 
+
 def demon_history():
     if not DEMONING_HISTORY:
         out("No DEMONING history.")
         return
     for i, name in enumerate(DEMONING_HISTORY, 1):
         out(f"{i}. -{name}")
+
 
 def demoning(args):
     achievement("demon")
@@ -1161,6 +1242,7 @@ def demoning(args):
     else:
         out("Unknown DEMONING command. Use -demoning help.")
 
+
 # ============================================================
 # MATRIX / GLITCH / AMBIENT
 # ============================================================
@@ -1171,11 +1253,13 @@ def matrix_effect():
         out("".join(random.choice(chars) for _ in range(55)))
         time.sleep(0.04)
 
+
 def glitch_effect():
     chars = "▓▒░#@$!?01"
     for _ in range(12):
         out("".join(random.choice(chars) for _ in range(55)))
         time.sleep(0.05)
+
 
 def ambient_mode(args):
     if args and args[0].lower() == "off":
@@ -1188,6 +1272,7 @@ def ambient_mode(args):
         out("Ambient mode ON.")
     else:
         living_background(8)
+
 
 # ============================================================
 # STATUS / HELP
@@ -1207,6 +1292,7 @@ def show_status():
     out("Tasks: " + str(len(todos)))
     out("DEMONING runs: " + str(len(DEMONING_HISTORY)))
     out("=====================================")
+
 
 def show_help():
     out("""
@@ -1235,7 +1321,7 @@ DEMONING
 -demoning exit        Leave
 
 AURIBOT — 65 COMMANDS
--bot help             List all 65 commands
+-bot help             List all commands
 -bot uuid             Generate UUID
 -bot timestamp        Unix timestamp
 -bot calendar         Current month calendar
@@ -1248,7 +1334,6 @@ AURIBOT — 65 COMMANDS
 -bot convert 10 km-mi Convert units
 -bot encode TEXT      Base64
 -bot hash TEXT        SHA-256
-(and many more)
 
 GENERATORS
 -uuid                 Generate UUID
@@ -1282,7 +1367,10 @@ PHONE
 -phone battery        Battery info
 -phone torch on       Flashlight on
 -phone torch off      Flashlight off
--phone vibrate 500    Vibrate for 500 ms
+-phone vibrate 5000   Vibrate for 5 seconds
+-termux vibrate 5000  Termux vibration
+-termux-vibrate 5000  Direct vibration alias
+-vibrate 5000         Quick vibration
 -clipboard get        Read clipboard
 -clipboard set TEXT   Copy text
 
@@ -1307,11 +1395,13 @@ GAMES
 ===================================================
 """)
 
+
 # ============================================================
 # MAIN COMMAND ROUTER
 # ============================================================
 
 START_TIME = time.time()
+
 
 def execute(raw):
     raw = raw.strip()
@@ -1345,7 +1435,7 @@ def execute(raw):
         achievement("fifty")
 
     try:
-        if command == "help" or command == "commands":
+        if command in ("help", "commands"):
             show_help()
 
         elif command == "demoning":
@@ -1354,7 +1444,7 @@ def execute(raw):
         elif command == "bot":
             auribot(args)
 
-        elif command in ("about",):
+        elif command == "about":
             out("AuriTerm " + VERSION)
             out("A colorful single-file terminal made for Auri.")
 
@@ -1450,7 +1540,10 @@ def execute(raw):
                 out("Usage: -writeforce FILE TEXT")
             else:
                 try:
-                    safe_path(args[0]).write_text(" ".join(args[1:]), encoding="utf-8")
+                    safe_path(args[0]).write_text(
+                        " ".join(args[1:]),
+                        encoding="utf-8"
+                    )
                     out("File replaced.")
                 except Exception as error:
                     out(str(error))
@@ -1473,16 +1566,20 @@ def execute(raw):
         elif command == "encrypt":
             text = " ".join(args)
             out("Educational Caesar cipher; not secure encryption.")
-            out("".join(chr((ord(c)-65+7)%26+65) if c.isupper()
-                        else chr((ord(c)-97+7)%26+97) if c.islower()
-                        else c for c in text))
+            out("".join(
+                chr((ord(c)-65+7)%26+65) if c.isupper()
+                else chr((ord(c)-97+7)%26+97) if c.islower()
+                else c for c in text
+            ))
 
         elif command == "decrypt":
             text = " ".join(args)
             out("Educational Caesar cipher; not secure encryption.")
-            out("".join(chr((ord(c)-65-7)%26+65) if c.isupper()
-                        else chr((ord(c)-97-7)%26+97) if c.islower()
-                        else c for c in text))
+            out("".join(
+                chr((ord(c)-65-7)%26+65) if c.isupper()
+                else chr((ord(c)-97-7)%26+97) if c.islower()
+                else c for c in text
+            ))
 
         elif command == "note":
             note_command(args)
@@ -1517,6 +1614,12 @@ def execute(raw):
         elif command == "phone":
             phone_command(args)
 
+        elif command == "termux":
+            termux_command(args)
+
+        elif command in ("termux-vibrate", "vibrate"):
+            vibrate_command(args)
+
         elif command == "clipboard":
             clipboard_command(args)
 
@@ -1540,7 +1643,10 @@ def execute(raw):
             save_json(FILES["config"], config)
             out("Rainbow: " + str(config["rainbow"]))
 
-        elif command == "exit" or command == "quit":
+        elif command in ("clear", "cls"):
+            clear_screen()
+
+        elif command in ("exit", "quit"):
             out("AuriTerm shutting down...")
             save_all()
             return False
@@ -1559,6 +1665,7 @@ def execute(raw):
 
     return True
 
+
 # ============================================================
 # MAIN LOOP
 # ============================================================
@@ -1570,6 +1677,7 @@ def main():
     out("UUID generator loaded.")
     out("DEMONING loaded.")
     out("Clipboard GET + SET loaded.")
+    out("FOUR VIBRATION COMMANDS loaded.")
     out("Type -help to explore.\n")
 
     while True:
@@ -1593,6 +1701,7 @@ def main():
 
     save_all()
     out("AuriTerm closed.")
+
 
 if __name__ == "__main__":
     main()
