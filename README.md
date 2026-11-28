@@ -4,6 +4,8 @@ A colorful, command driven terminal environment for Termux. You also need to get
 Example: termux-vibrate -d 1000
 Created by AuriCuki1
 
+Note: if bot commands don't work then start with -bot in order to use the -bot commands
+
 # Features
 
 AuriBot, a programmed assistant
